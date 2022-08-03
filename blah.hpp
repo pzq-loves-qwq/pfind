@@ -43,10 +43,13 @@ inline u64 ev2(u64 a, u64 b, u64 c)
     return s & ((u64(1) << w) - 1);
 }
 
-struct node
+struct __attribute__((aligned(64))) node
 {
     u64 row;
     node *parent;
+
+    node() {}
+    node(u64 r, node *p) : row(r), parent(p) {}
 };
 
 inline node *kth_parent(node *n, int k)
@@ -63,13 +66,29 @@ inline void output_row(u64 r)
     std::printf("$");
 }
 
+const int HASHB = 1057, HASHMOD = 43128381;
+
 inline u64 hash_node(node *n)
 {
     u64 hash = 0;
     for (int i = 0; i < 2 * p; i++)
     {
-        hash = (hash * 73 + (n -> row)) % 1000000007;
+        hash = (hash * HASHB + (n -> row)) % HASHMOD;
         n = n -> parent;
     }
     return hash;
+}
+
+inline bool is_same_as(node *u, node *v)
+{
+    if (u == v)
+        return true;
+    for (int i = 0; i < 2 * p; i++)
+    {
+        if (u -> row != v -> row)
+            return false;
+        u = u -> parent;
+        v = v -> parent;
+    }
+    return true;
 }
