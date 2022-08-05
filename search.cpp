@@ -104,9 +104,15 @@ void bfs()
                     print_spaceship(v);
                     continue;
                 }
-                for (auto&& w : hash[hash_node(v)])
+                
+                bool ok = true;
+                for (auto& w : hash[hash_node(v)])
                     if (is_same_as(v, w))
-                        continue;
+                    {
+                        ok = false; break;
+                    }
+                if (!ok) continue;
+
                 hash[hash_node(v)].push_back(v);
                 pool[qtail++] = *v;
             }
