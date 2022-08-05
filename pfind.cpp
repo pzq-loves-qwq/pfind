@@ -1,9 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <cassert>
 #include <queue>
 #include <unordered_set>
-#include "blah.hpp"
+#include "utils.hpp"
 
 std::vector<node*> hash[HASHMOD];
 
@@ -24,7 +25,7 @@ inline void print_spaceship(node *n)
     std::printf("x = 0, y = 0\n");
     while (n != &pool[0])
     {
-        output_row(n -> row);
+        output_row(mirror(n -> row));
         printf("\n");
         n = kth_parent(n, p);
     }
@@ -38,7 +39,7 @@ inline void initialize()
     hash[0].push_back(&pool[0]);
 }
 
-const u64 dfs_depth = p, dfs_threshold = 1 << 20;
+const u64 dfs_depth = p, dfs_threshold = POOLSIZE >> 4;
 node tmp_nodes[dfs_depth];
 
 bool dfs(node *n, int depth)
@@ -64,6 +65,29 @@ bool dfs(node *n, int depth)
     return false;
 }
 
+inline void lookahead(bool ok[1 << w], node *u)
+{
+    node *v = kth_parent(u, p - y - 1);
+    u64 c = v -> row;
+    v = kth_parent(v, y);
+    u64 b = v -> row;
+    v = kth_parent(v, p);
+    u64 a = v -> row;
+
+    v = kth_parent(u, y - 1);
+    u64 e = v -> row;
+    v = kth_parent(v, p);
+    u64 d = v -> row;
+
+    std::memset(ok, 0, (sizeof(bool)) << w);
+    for (u64 i = 0; i < (u64(1) << w); i++)
+    {
+        u64 x = ev2(d, e, i);
+        if (ev2(a, b, x) == c)
+            ok[x] = true;
+    }
+}
+
 void bfs()
 {
     int qhead = 0, qtail = 1;
@@ -82,20 +106,10 @@ void bfs()
             continue;
         qhead++;
         
-        // printf("Inside node:\n");
-        // for (int i = 0; i < 2 * p; i++)
-        //     output_row(kth_parent(u, i) -> row);
-
-        node *v = kth_parent(u, p - y - 1);
-        u64 c = v -> row;
-        v = kth_parent(v, y);
-        u64 b = v -> row;
-        v = kth_parent(v, p);
-        u64 a = v -> row;
-        // printf("a = %lu, b = %lu, c = %lu\n", a, b, c);
-
+        static bool ok[1 << w];
+        lookahead(ok, u);
         for (u64 x = 0; x < (u64(1) << w); x++)
-            if (ev2(a, b, x) == c)
+            if (ok[x])
             {
                 // printf("x = %lu\n", x);
                 node *v = newnode(node(x, u));
